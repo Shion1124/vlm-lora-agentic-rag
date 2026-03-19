@@ -54,7 +54,7 @@ coverage.xml
 
 # Jupyter Notebook
 .ipynb_checkpoints
-*.ipynb
+# *.ipynb  # Include notebooks in repository for portfolio
 
 # IPython
 profile_default/
@@ -87,11 +87,11 @@ temp/
 logs/
 .cache/
 
-# Test files (optional - can remove if needed)
-test_api.sh
-api_test.py
-validate_implementation.py
-requirements_test.txt
+# Test files (optional - excluded from portfolio)
+# test_api.sh
+# api_test.py
+# validate_implementation.py
+# requirements_test.txt
 
 # Deployment scripts (optional - can comment out)
 # deploy.sh
