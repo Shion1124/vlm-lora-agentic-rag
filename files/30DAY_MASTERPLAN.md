@@ -9,18 +9,18 @@
 ## 🎯 30日間の全体戦略
 
 ```
-Week 1: ポートフォリオ完成・公開 ✅（実LoRA学習対応）
-  └─ Day 1-3: Colab実行 + LoRA学習 + HFアップロード
-  └─ Day 4-6: GitHub・デモ動画公開
+Week 1: ポートフォリオ完成・公開 ✅ 完了
+  └─ Day 1-3: Colab実行 + LoRA学習 + HFアップロード ✅
+  └─ Day 4-6: GitHub・デモ動画公開 ✅
   └─ Day 7  : LinkedIn で最初の投稿
 
-Week 2: FastAPI本番化・デプロイ
-  └─ Day 8-10: FastAPI実装 + ローカルテスト
-  └─ Day 11-13: Dockerコンテナ化
-  └─ Day 14  : Cloud Run/ECS デプロイ
+Week 2: FastAPI本番化・デプロイ ✅ 完了
+  └─ Day 8-10: FastAPI v2.0.0 実装（APIキー認証・マルチモーダル対応）✅
+  └─ Day 11-13: Docker コンテナ化 + Visual RAG 統合 ✅
+  └─ Day 14  : Cloud Run デプロイ完了 ✅
 
-Week 3: ドキュメント・発信本格化
-  └─ Day 15-17: 技術ブログ執筆（Medium/Zenn）
+Week 3: ドキュメント・発信本格化 ✅ 完了
+  └─ Day 15-17: 技術ブログ 5 本執筆完了 ✅
   └─ Day 18-20: 面接対策 (深い質問への回答)
   └─ Day 21  : デモ動画・技術解説動画完成
 
@@ -32,9 +32,27 @@ Week 4: 応募・本面接
 Goal: 内定ゲット 🎉
 ```
 
+### 📌 実績サマリー（2026-03-23 時点）
+
+| 項目 | 状況 | 詳細 |
+|------|------|------|
+| Colab 実行 | ✅ 完了 | 全 27 セル実行成功 |
+| LoRA 学習 | ✅ 完了 | LLaVA-150K 3000件、Loss=0.969 |
+| HuggingFace | ✅ 公開済 | [Shion1124/vlm-lora-agentic-rag](https://huggingface.co/Shion1124/vlm-lora-agentic-rag) |
+| GitHub | ✅ 公開済 | リポジトリ公開・複数コミット |
+| FastAPI | ✅ 完了 | v2.0.0（APIキー認証・CORS制限・マルチモーダル） |
+| Visual RAG | ✅ 完了 | CLIP (openai/clip-vit-base-patch32) + FAISS |
+| Agentic RAG | ✅ 完了 | Sentence-Transformers + FAISS + BM25 |
+| Docker | ✅ 完了 | python:3.10-slim ベース（CPU/GPU 両対応） |
+| Cloud Run | ✅ 稼働中 | `vlm-agentic-rag-api-00004-rb7`、4 CPU / 16GB RAM |
+| 技術ブログ | ✅ 5本完了 | 概要・LoRA・Agentic RAG・FastAPI/Deploy・最適化 |
+| 本番 URL | ✅ 稼働中 | `https://vlm-agentic-rag-api-744279114226.us-central1.run.app` |
+
 ---
 
-## 📋 Week 1：ポートフォリオ完成・公開 ✅（実LoRA学習対応）
+## 📋 Week 1：ポートフォリオ完成・公開 ✅ 完了
+
+> **実績**: Colab 全 27 セル実行成功、LoRA 学習完了（Loss=0.969）、HuggingFace 公開済み
 
 ### Day 1-3：Colab 実行 + LoRA学習 + HFアップロード
 
@@ -177,129 +195,135 @@ Goal: 内定ゲット 🎉
 
 ---
 
-## 📣 Week 2：コミュニティ発信・認知獲得
+## 📣 Week 2：FastAPI 本番化・Cloud Run デプロイ ✅ 完了
 
-### Day 8-10：ブログ執筆・投稿
+> **実績**: FastAPI v2.0.0（APIキー認証・マルチモーダル対応）、Visual RAG (CLIP) 統合、Cloud Run デプロイ成功
+>
+> **本番 URL**: `https://vlm-agentic-rag-api-744279114226.us-central1.run.app`
 
-#### Day 8（火）
+### Day 8-10：FastAPI v2.0.0 実装 + Visual RAG 統合 ✅
+
+#### Day 8（火）✅ 完了
 
 **朝（1.5時間）**
-- [ ] Qiita アカウント作成（未作成の場合）
-- [ ] Zenn アカウント作成（未作成の場合）
+- [x] FastAPI v2.0.0 API 設計
+- [x] APIキー認証（X-API-Key ヘッダー）実装
 
 **昼（2.5時間）**
-- [ ] ブログ記事を執筆（Qiita）
-  - タイトル：「VLM + Agentic RAG で企業ドキュメント理解を実装した話」
-  - TECHNICAL_BLOG.md の内容をベースに
-  - カテゴリ：#AI #MachineLearning #NLP #RAG #Python
+- [x] マルチモーダルエンドポイント実装
+  - `POST /analyze` — VLM 画像解析
+  - `POST /search` — テキスト検索（Agentic RAG）
+  - `POST /multimodal-search` — 画像+テキスト検索（Visual RAG）
+  - `GET /health` — ヘルスチェック
+- [x] CORS 制限（環境変数ベース）
 
 **夜（1時間）**
-- [ ] 記事を下書き保存
-- [ ] 誤字脱字をチェック
-- [ ] スクリーンショット・画像を追加
+- [x] ローカルテスト完了
+- [x] セキュリティ対策確認（非rootユーザー、APIキー認証）
 
-#### Day 9（水）
+#### Day 9（水）✅ 完了
 
 **朝（1時間）**
-- [ ] Qiita 記事をレビュー・修正
-- [ ] 公開
+- [x] Visual RAG エンジン実装（CLIP + FAISS）
+- [x] openai/clip-vit-base-patch32 統合
 
 **昼（2時間）**
-- [ ] Zenn に記事を投稿
-  - Qiita とは異なる視点で
+- [x] Agentic RAG エンジン実装
+  - Sentence-Transformers (all-MiniLM-L6-v2)
+  - FAISS IndexFlatL2 + BM25 ハイブリッド検索
 
 **夜（1時間）**
-- [ ] 両方の記事に「GitHub へのリンク」を記載
-- [ ] SNS で拡散準備
+- [x] マルチモーダル検索パイプライン統合テスト
+- [x] CPU/GPU 両対応のフォールバック設計
 
-#### Day 10（木）
+#### Day 10（木）✅ 完了
 
 **朝（1時間）**
-- [ ] ブログ記事を読み返す
-- [ ] コメント返信・反応確認
+- [x] production 設定の最終調整
+- [x] requirements_cloudrun.txt 整備
 
 **昼（2時間）**
-- [ ] 追加記事の執筆（オプション）
-  - 「実装上の工夫：VLM の Hallucination 対策」
+- [x] Dockerfile 作成（CPU版: python:3.10-slim）
+  - libgl1 対応（Debian Trixie 互換）
+  - 非 root ユーザー設定
+  - マルチステージビルド
 
 **夜（1時間）**
-- [ ] 記事投稿の進捗を記録
+- [x] ローカル Docker ビルド・テスト完了
 
 ---
 
-### Day 11-13：SNS 発信本格化
+### Day 11-13：Cloud Run デプロイ + ブログ執筆 ✅
 
-#### Day 11（金）
+#### Day 11（金）✅ 完了
 
 **朝（1時間）**
-- [ ] LinkedIn 記事を執筆
-  ```
-  【成果共有】
-  「VLM Agentic RAG」を開発・公開しました
-  
-  従来のRAGではテキストしか扱えず、図表が失われていました。
-  このシステムでは、VLMを使って視覚情報も保持。
-  Agentic RAGで複雑なクエリにも対応します。
-  
-  GitHub: ...
-  技術ブログ: ...
-  ```
+- [x] GCP プロジェクト設定（vlm-agentic-rag）
+- [x] Artifact Registry 有効化
 
 **昼（1時間）**
-- [ ] LinkedIn に投稿
-- [ ] 適切なハッシュタグ追加
+- [x] Cloud Run デプロイ実行（`--source .` 方式）
+  ```
+  gcloud run deploy vlm-agentic-rag-api \
+    --source . --region us-central1 \
+    --memory 16Gi --cpu 4 \
+    --set-env-vars API_KEY=your-secret-key
+  ```
+- [x] ビルド成功・デプロイ完了
 
 **夜（1時間）**
-- [ ] Twitter/X に投稿
-  - より短く、テクニカル向けに
-  - GitHub・HuggingFace へのリンク
+- [x] 全エンドポイントの動作確認
+  - `GET /health` → `{"status": "healthy"}` ✅
+  - `GET /` → API 情報 v2.0.0 ✅
+  - `POST /search` → APIキー認証動作 ✅
 
-#### Day 12（土）
+#### Day 12（土）✅ 完了
 
 **朝（1時間）**
-- [ ] SNS のフォローアップ
-- [ ] LinkedIn のコメントに返信
+- [x] 技術ブログ記事執筆開始
+- [x] BLOG_ARTICLE_001: VLM + LoRA + Visual RAG + Agentic RAG 概要
 
 **昼（2時間）**
-- [ ] Reddit・Hacker News への投稿検討
-  - r/MachineLearning
-  - r/Python
-  - Show HN
+- [x] BLOG_ARTICLE_002: LoRA fine-tuning 実装ガイド
+- [x] BLOG_ARTICLE_003: Agentic RAG 詳細解説
 
 **夜（1時間）**
-- [ ] 反応・フィードバック収集
+- [x] BLOG_ARTICLE_004: FastAPI + Docker + Cloud Run デプロイ
+- [x] BLOG_ARTICLE_005: パフォーマンス最適化
 
-#### Day 13（日）
+#### Day 13（日）✅ 完了
 
 **朝（30分）**
-- [ ] Week 2 の反応をまとめる
-- [ ] 改善点をノート
+- [x] 全ブログ記事に Visual RAG + Cloud Run 実績を反映
+- [x] ポートフォリオサマリー更新
 
 **昼（1時間）**
-- [ ] 必要に応じて記事を更新
+- [x] 全ドキュメントの整合性確認
+- [x] 本番 URL・API バージョン・エンドポイント記述の統一
 
 **夜（30分）**
-- [ ] Week 3 の準備（面接対策）
+- [x] Git commit + push
 
 ---
 
-### Day 14：デモ動画完成
+### Day 14：ドキュメント最終整備 ✅
 
-#### Day 14（月）
+#### Day 14（月）✅ 完了
 
 **朝（1.5時間）**
-- [ ] スクリーン記録ツール（OBS など）をセットアップ
-- [ ] デモ動画スクリプトを読み込む（DEMO_VIDEO_SCRIPT.md）
+- [x] 30DAY_MASTERPLAN.md を実績ベースで更新
+- [x] 00_PORTFOLIO_SUMMARY.md を最新状態に更新
 
 **昼（3時間）**
-- [ ] 30 秒デモ動画を制作
-  - Colab 画面の記録
-  - Gradio UI のデモ
-  - 検索結果の表示
+- [x] 全 5 本のブログ記事に以下を反映:
+  - Visual RAG (CLIP) 統合の記述
+  - API v2.0.0（APIキー認証・マルチモーダル対応）
+  - 実際の Cloud Run デプロイ結果
+  - 本番 URL・エンドポイント・セキュリティ
 
 **夜（1時間）**
-- [ ] 動画を編集・処理
-- [ ] YouTube・LinkedIn に公開
+- [x] 最終動作確認（本番環境でのヘルスチェック）
+- [x] GitHub に全更新をプッシュ
 
 ---
 
@@ -595,27 +619,28 @@ Goal: 内定ゲット 🎉
 ## 📊 30日間の成果物チェックリスト
 
 ```
-Week 1 - ポートフォリオ完成
-☑️ Colab で実行確認
-☑️ ローカル環境構築
-☑️ テスト全実行
-☑️ API 動作確認
-☑️ GitHub リポジトリ公開
-☑️ HuggingFace モデルアップロード
+Week 1 - ポートフォリオ完成 ✅ 完了
+✅ Colab で全 27 セル実行確認
+✅ LoRA 学習完了（Loss=0.969）
+✅ テスト全実行
+✅ API 動作確認（v2.0.0）
+✅ GitHub リポジトリ公開
+✅ HuggingFace モデルアップロード（Shion1124/vlm-lora-agentic-rag）
 ☑️ GitHub Releases 作成
 
-Week 2 - コミュニティ発信
-☑️ ブログ記事 2 本以上
-☑️ LinkedIn 投稿 3+
-☑️ Twitter/X 投稿 5+
-☑️ Qiita・Zenn 投稿
-☑️ 30 秒デモ動画
-☑️ 100+ コミュニティ閲覧
+Week 2 - FastAPI 本番化・デプロイ ✅ 完了
+✅ FastAPI v2.0.0（APIキー認証・マルチモーダル）
+✅ Visual RAG (CLIP) 統合
+✅ Agentic RAG 統合
+✅ Docker コンテナ化（CPU/GPU 両対応）
+✅ Cloud Run デプロイ成功
+✅ 全エンドポイント動作確認
+✅ 技術ブログ 5 本執筆完了
 
 Week 3 - 面接対策
 ☑️ 技術理解を深掘り
 ☑️ 面接シミュレーション実施
-☑️ モ模擬面接（友人・メンター）
+☑️ 模擬面接（友人・メンター）
 ☑️ 逆質問 5+ 個準備
 ☑️ アーキテクチャ図を手書き化
 

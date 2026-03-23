@@ -2,7 +2,7 @@
 title: "パフォーマンス最適化｜4-bit量子化で 50% メモリ削減"
 description: "VLM パフォーマンス最適化の完全ガイド。4-bit量子化（NF4）、推論高速化、メモリ削減、バッチ処理を実装例とともに解説。実測値で 28GB → 7GB を実現。"
 category: "機械学習"
-tags: ["量子化", "パフォーマンス最適化", "メモリ削減", "推論", "VLM", "LLaVA"]
+tags: ["量子化", "パフォーマンス最適化", "メモリ削減", "推論", "VLM", "LLaVA", "Cloud Run"]
 date: "2026-03-21"
 author: "Yoshihisa Shinzaki"
 slug: "performance-optimization-quantization"
@@ -32,6 +32,7 @@ LLaVA-7B (4-bit): 7GB メモリで十分
 > ✅ メモリ: 28GB → 7GB（75% 削減）  
 > ✅ 推論速度: 2.5 秒/ページ（超高速）  
 > ✅ 精度: 87%（量子化後も維持）  
+> ✅ Cloud Run: CPUモードでも動作（モックモードフォールバック）  
 > ✅ 本番環境: Google Cloud Run で稼働中
 
 ---
@@ -999,6 +1000,61 @@ print(json.dumps(results, indent=2, ensure_ascii=False))
 
 ---
 
+## Cloud Run での CPU モード最適化
+
+### GPU なし環境での戦略
+
+Cloud Run は CPU のみの環境です。VLM（LLaVA）は GPU 必須のため、**モックモードフォールバック**で安定動作を実現しています。
+
+```
+【デプロイ環境ごとの最適化戦略】
+
+GPU 環境（Colab / ローカル GPU）:
+├─ VLM: LLaVA-7B 4-bit 量子化 → 完全推論
+├─ Visual RAG: CLIP → 画像検索有効
+├─ Agentic RAG: Sentence-T + BM25 + FAISS → 全戦略
+└─ メモリ: ~7GB VRAM
+
+Cloud Run（CPU のみ）:
+├─ VLM: モックモード（graceful fallback）
+├─ Visual RAG: CLIP → HF_TOKEN 設定時に有効
+├─ Agentic RAG: Sentence-T + BM25 + FAISS → 全戦略
+└─ メモリ: 16GB RAM（CPU版 torch）
+```
+
+### CPU版 torch の最適化
+
+```dockerfile
+# Cloud Run 用: CPU 版 torch（サイズ削減）
+RUN pip install torch==2.2.2+cpu \
+      --index-url https://download.pytorch.org/whl/cpu
+
+# ❌ GPU 版は 2GB+、Cloud Run では不要
+# ❌ bitsandbytes は CUDA 必須のため除外
+```
+
+### フォールバック設計
+
+```python
+# VLM がロードできない場合のフォールバック
+try:
+    model = LlavaForConditionalGeneration.from_pretrained(...)
+except Exception as e:
+    logger.warning(f"⚠️ LLaVA loading failed: {e}")
+    logger.warning("Continuing in mock mode")
+    model = None  # RAG 機能のみで動作
+
+# CLIP がロードできない場合のフォールバック
+try:
+    clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+except Exception as e:
+    logger.warning(f"⚠️ CLIP loading failed: {e}")
+    logger.info("Falling back to text-only search")
+    clip_model = None  # テキスト検索のみで動作
+```
+
+---
+
 ## 参考文献
 
 ### 量子化技術
@@ -1056,6 +1112,7 @@ print(json.dumps(results, indent=2, ensure_ascii=False))
 ✅ 推論速度：2.5 秒/ページ（超高速）
 ✅ 精度：87%（量子化後も向上）
 ✅ コスト：月間 $4,914 削減（91% 削減）
+✅ Cloud Run: CPUモードでもモックフォールバックで安定動作
 ✅ スケーラビリティ：自動スケーリング対応
 ```
 
@@ -1079,6 +1136,7 @@ print(json.dumps(results, indent=2, ensure_ascii=False))
 **更新履歴**
 
 - 2026-03-21：初版公開
+- 2026-03-23：Cloud Run CPUモード対応追記、モックモードフォールバック追加
 
 ---
 

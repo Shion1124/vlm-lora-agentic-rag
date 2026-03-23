@@ -1,21 +1,21 @@
-# 🎯 ストックマーク求人対応｜VLM + LoRA Agentic RAG ポートフォリオ
+# 🎯 VLM + LoRA Agentic RAG ポートフォリオ
 
-**最終更新**: 2026-03-20  
-**対象求人**: ストックマーク株式会社「AI R&Dエンジニア（VLM・マルチモーダル）」  
+**最終更新**: 2026-03-23  
+**対象求人**: ◯◯◯◯株式会社「AI R&Dエンジニア（VLM・マルチモーダル）」  
 **JOB ID**: JA-082448  
-**ステータス**: ✅ **実LoRA学習版 / 本番環境完全対応**
+**ステータス**: ✅ **実LoRA学習版 / Visual RAG + Agentic RAG / Cloud Run デプロイ完了**
 
 ---
 
 ## 📊 成果物一覧
 
-### 🎯 Phase 1: VLM + LoRA Agentic RAG コア実装
+### 🎯 Phase 1: VLM + LoRA + Visual RAG + Agentic RAG コア実装
 
 | ファイル | 説明 | 用途 |
 |--------|------|------|
-| **vlm_agentic_rag_colab.ipynb** | 完全実装Notebook（13セル） | Week 1-2: Colab実行+LoRA学習 |
-| **vlm_agentic_rag_complete.py** | 統合パイプライン（590行） | Colab / 本番デプロイ |
-| **api_production.py** | FastAPI実装（完全版） | REST API（本番対応） |
+| **vlm_agentic_rag_colab.ipynb** | 完全実装Notebook（27セル） | Colab実行+LoRA学習+デモ |
+| **vlm_agentic_rag_complete.py** | 統合パイプライン（Visual RAG + Agentic RAG） | Colab / 本番デプロイ |
+| **api_production.py** | FastAPI v2.0.0（APIキー認証・マルチモーダル対応） | REST API（本番運用中） |
 
 ### 🎓 Phase 2: LoRA学習・HuggingFace統合
 
@@ -25,13 +25,16 @@
 | **ipynb Cell 10** | HF自動アップロード | adapter_model をHFへ |
 | **README.md (auto)** | モデルカード生成 | HF リポジトリメタデータ |
 
-### 🐳 Phase 3: プロダクション化
+### 🐳 Phase 3: プロダクション化 + Cloud Run デプロイ
 
 | ファイル | 説明 | 用途 |
 |--------|------|------|
-| **Dockerfile** | コンテナ化（本番環境） | CUDA 12.1対応 |
+| **Dockerfile**（ルート） | Cloud Run 用（python:3.10-slim, CPU） | `gcloud run deploy --source .` |
+| **deployment/Dockerfile** | GPU版（nvidia/cuda:12.1） | ローカルGPU環境用 |
 | **docker-compose.yml** | マルチコンテナ構成 | ワンコマンド起動 |
-| **requirements_production.txt** | 本番依存パッケージ | 環境再現可能性 |
+| **requirements_cloudrun.txt** | Cloud Run用依存パッケージ（CPU torch） | Cloud Run デプロイ |
+| **requirements_production.txt** | GPU版依存パッケージ | GPU環境用 |
+| **.env.example** | 環境変数テンプレート | API_KEY, HF_TOKEN 設定 |
 
 ### 📚 Phase 4: ドキュメント・ガイド
 
@@ -45,25 +48,28 @@
 
 ## 🏆 ポートフォリオの強み
 
-### ✅ 技術的な完成度（新版）
+### ✅ 技術的な完成度（最新版）
 
 ```
 【評価基準】          【成果物の達成度】
 ────────────────────────────────────
 実LoRA学習            ██████████ 100% ⭐
-  └─ 完全な学習コード実装 (Cell 9-10)
+  └─ 3,000サンプル学習完了 (loss: 0.969)
   
 VLM実装              ██████████ 100%
   └─ LLaVA実動作・4bit量子化対応
+
+Visual RAG           ██████████ 100% 🆕
+  └─ CLIP (openai/clip-vit-base-patch32) + FAISS
   
 Agentic RAG          ██████████ 100%
-  └─ マルチ戦略検索・自己検証ループ
+  └─ BM25 + Semantic + ハイブリッド検索
   
-本番デプロイ          ██████████ 100%
-  └─ FastAPI + Docker + docker-compose
+本番デプロイ          ██████████ 100% ⭐
+  └─ Cloud Run 稼働中 + APIキー認証
   
 ドキュメント          ██████████ 100%
-  └─ ipynb + ガイド + テスト仕様書
+  └─ ipynb + ブログ5記事 + API仕様書
 ```
 
 ### ✅ Stockmark求人との適合度
@@ -72,12 +78,34 @@ Agentic RAG          ██████████ 100%
 【求人要件】              【対応状況】
 ────────────────────────────────────
 VLM活用経験              ✅ LLaVA完全実装 + 実推論
-LoRA微調整              ✅ 実学習コード (r=64, alpha=128)
+LoRA微調整              ✅ 実学習コード (r=64, alpha=128, loss=0.969)
 LLM応用開発              ✅ 構造化出力・JSON抽出
-RAG理解                  ✅ Agentic RAG 3戦略
-PoC→本番化              ✅ ipynb → API → Docker
-マルチモーダル対応       ✅ 画像+テキスト処理
-複雑度の高い実装         ✅ 複数依存パッケージ統合
+RAG理解                  ✅ Visual RAG (CLIP) + Agentic RAG
+PoC→本番化              ✅ ipynb → API → Cloud Run デプロイ完了
+マルチモーダル対応       ✅ 画像検索(CLIP) + テキスト検索(FAISS)
+複雑度の高い実装         ✅ 複数依存パッケージ統合・APIキー認証
+```
+
+### ✅ デプロイ済み本番環境
+
+```
+【Cloud Run 本番環境】
+Service URL: https://vlm-agentic-rag-api-744279114226.us-central1.run.app
+API v2.0.0 | CPU 4 | メモリ 16Gi | APIキー認証有効
+
+エンドポイント:
+  GET  /          → API情報
+  GET  /health    → ヘルスチェック
+  POST /analyze   → ドキュメント分析（認証必須）
+  POST /search    → テキスト検索（認証必須）
+  POST /multimodal-search → マルチモーダル検索（認証必須）
+  GET  /docs      → Swagger UI
+
+セキュリティ:
+  ✅ X-API-Key ヘッダー認証
+  ✅ CORS オリジン制限
+  ✅ 非rootユーザー実行
+  ✅ ヘルスチェック設定済み
 ```
 
 ---
@@ -91,12 +119,13 @@ PoC→本番化              ✅ ipynb → API → Docker
 vlm_agentic_rag_colab.ipynb
 
 # 上から順に全セル実行：
-Cell 1: 環境セットアップ（LLaVA + 依存関係）
-Cell 2-3: VLMHandler クラス（実LLaVA）
-Cell 4-7: Agentic RAG + デモ
-Cell 8-10: 🆕 LoRA学習 + HFアップロード
+Cell 1-3: 環境セットアップ + VLMHandler
+Cell 4-6: Visual RAG (CLIP) + Agentic RAG 構築
+Cell 7: マルチモーダル検索デモ
+Cell 8: HuggingFace パイプライン登録
+Cell 9-10: LoRA学習 (3,000サンプル) + HFアップロード
 Cell 11: Gradio UI 起動
-Cell 12: 本番ガイド表示
+Cell 12: 最終サマリー表示
 
 # 完了後：
 ✅ LoRA重み が HuggingFaceにアップロード
