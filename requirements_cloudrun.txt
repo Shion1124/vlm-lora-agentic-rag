@@ -1,0 +1,29 @@
+# ============================================================
+# Cloud Run / CPU Requirements (GPU なし環境用)
+# ============================================================
+# torch は Dockerfile 内で CPU 版を個別インストール
+
+# Core ML（torch 以外）
+transformers==4.38.0
+peft==0.8.0
+accelerate==0.28.0
+
+# Vision & Document Processing
+Pillow==10.1.0
+pdf2image==1.16.3
+
+# Embedding & Retrieval
+sentence-transformers==2.2.2
+faiss-cpu==1.7.4
+
+# API & Web
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# Utilities
+huggingface-hub<1.0,>=0.16.0
+requests==2.31.0
+numpy<2
+python-dotenv==1.0.0

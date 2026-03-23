@@ -1,0 +1,16 @@
+.git
+.gitignore
+venv_vlm/
+venv/
+.venv/
+__pycache__/
+*.pyc
+notebooks/
+files/
+docs/
+.DS_Store
+*.md
+!requirements_production.txt
+LICENSE
+.env
+.env.example
