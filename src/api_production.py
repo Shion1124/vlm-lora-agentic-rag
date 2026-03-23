@@ -1,20 +1,24 @@
 # ============================================================
-# FastAPI: VLM + LoRA Agentic RAG 本番API
+# FastAPI: VLM + LoRA + Visual RAG + Agentic RAG 本番API
 # 
 # Usage:
 #   uvicorn api_production:app --host 0.0.0.0 --port 8000 --reload
 # 
 # Test:
 #   curl -X POST -F "file=@document.pdf" http://localhost:8000/analyze
+#   curl -X POST -H "Content-Type: application/json" \
+#        -d '{"query": "売上?" }' http://localhost:8000/multimodal-search
 # ============================================================
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 import torch
 import asyncio
 import json
+import os
 from pathlib import Path
 from datetime import datetime
 import logging
@@ -31,19 +35,41 @@ logger = logging.getLogger(__name__)
 # ============================================================
 
 app = FastAPI(
-    title="VLM + LoRA Agentic RAG API",
-    description="Document structuring with LLM-adapted Vision Language Model",
-    version="1.0.0"
+    title="VLM + LoRA + Visual RAG + Agentic RAG API",
+    description="Multimodal document structuring: Visual RAG (image search) + Agentic RAG (text search)",
+    version="2.0.0"
 )
 
-# CORS設定（本番環境では制限）
+# ============================================================
+# CORS設定
+# ============================================================
+
+ALLOWED_ORIGINS = os.environ.get(
+    "ALLOWED_ORIGINS",
+    "https://*.run.app,http://localhost:3000,http://localhost:8080"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+# ============================================================
+# API Key 認証
+# ============================================================
+
+API_KEY = os.environ.get("API_KEY", "")
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+async def verify_api_key(api_key: str = Security(api_key_header)):
+    """API Key 検証（API_KEY 環境変数が設定されている場合のみ有効）"""
+    if not API_KEY:
+        return  # API_KEY 未設定時は認証スキップ（開発用）
+    if api_key != API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid or missing API key")
 
 # ============================================================
 # グローバル変数
@@ -77,12 +103,22 @@ class SearchResponse(BaseModel):
     iterations: int
     strategies_used: list
 
+class MultimodalSearchRequest(BaseModel):
+    query: str
+    top_k: int = 5
+
+class MultimodalSearchResponse(BaseModel):
+    query: str
+    multimodal_search: dict
+    metadata: dict
+
 class HealthResponse(BaseModel):
     status: str
     model_loaded: bool
     base_model: str
     lora_adapter: str
     lora_loaded: bool
+    visual_rag_available: bool
     timestamp: str
 
 # ============================================================
@@ -149,8 +185,9 @@ async def startup_event():
             pipeline.vlm._loaded = True
             logger.info("✅ VLM integrated into pipeline (with LoRA fine-tuning)")
         try:
-            pipeline.build_agentic_rag()
-            logger.info("✅ Pipeline initialized")
+            logger.info("Initializing multimodal RAG (Visual + Agentic)...")
+            pipeline.visual_rag.setup_clip()  # Visual RAG 初期化
+            logger.info("✅ Pipeline initialized (multimodal ready)")
         except Exception as rag_error:
             logger.warning(f"⚠️ Pipeline RAG initialization failed: {rag_error}")
             logger.warning("Continuing with limited functionality")
@@ -163,7 +200,7 @@ async def startup_event():
 # ============================================================
 
 @app.post("/analyze", response_model=AnalyzeResponse)
-async def analyze_document(file: UploadFile = File(...)):
+async def analyze_document(file: UploadFile = File(...), _: None = Depends(verify_api_key)):
     """
     PDFまたは画像ファイルを分析して構造化JSON出力
     
@@ -235,7 +272,7 @@ async def analyze_document(file: UploadFile = File(...)):
 # ============================================================
 
 @app.post("/search", response_model=SearchResponse)
-async def search_documents(request: SearchRequest):
+async def search_documents(request: SearchRequest, _: None = Depends(verify_api_key)):
     """
     Agentic RAGで文書を検索
     
@@ -276,6 +313,54 @@ async def search_documents(request: SearchRequest):
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
 # ============================================================
+# エンドポイント: /multimodal-search
+# ============================================================
+
+@app.post("/multimodal-search", response_model=MultimodalSearchResponse)
+async def multimodal_search_documents(request: MultimodalSearchRequest, _: None = Depends(verify_api_key)):
+    """
+    Visual RAG + Agentic RAG マルチモーダル検索
+    
+    画像の視覚検索 + テキストの意味検索を統合
+    
+    Args:
+        request: MultimodalSearchRequest (query + top_k)
+    
+    Returns:
+        MultimodalSearchResponse: 統合検索結果
+    
+    Example:
+        curl -X POST -H "Content-Type: application/json" \\
+             -d '{"query": "売上グラフ", "top_k": 5}' \\
+             http://localhost:8000/multimodal-search
+    """
+    
+    if not pipeline or len(pipeline.documents) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="No documents indexed. Please upload documents first."
+        )
+    
+    try:
+        logger.info(f"Multimodal search: {request.query}")
+        
+        result = pipeline.multimodal_search(request.query, top_k=request.top_k)
+        
+        text_count = len(result['multimodal_search']['text_results']['items'])
+        visual_count = len(result['multimodal_search']['visual_results']['items'])
+        logger.info(f"Multimodal results: {text_count} text + {visual_count} visual")
+        
+        return MultimodalSearchResponse(
+            query=request.query,
+            multimodal_search=result['multimodal_search'],
+            metadata=result['metadata']
+        )
+    
+    except Exception as e:
+        logger.error(f"Multimodal search error: {e}")
+        raise HTTPException(status_code=500, detail=f"Multimodal search failed: {str(e)}")
+
+# ============================================================
 # エンドポイント: /health
 # ============================================================
 
@@ -285,14 +370,17 @@ async def health_check():
     ヘルスチェック
     
     Returns:
-        HealthResponse: サーバー状態（LoRA 適用有無含む）
+        HealthResponse: サーバー状態（LoRA、Visual RAG 対応有無含む）
     """
+    visual_rag_ready = pipeline and pipeline.visual_rag and pipeline.visual_rag.clip_model is not None
+    
     return HealthResponse(
         status="healthy",
         model_loaded=vlm_loaded,
         base_model="llava-v1.5-7b",
         lora_adapter="Shion1124/vlm-lora-agentic-rag",
         lora_loaded=vlm_loaded,
+        visual_rag_available=visual_rag_ready,
         timestamp=datetime.now().isoformat()
     )
 
@@ -304,18 +392,22 @@ async def health_check():
 async def root():
     """ルートエンドポイント"""
     return {
-        "name": "VLM + LoRA Agentic RAG API",
-        "version": "1.0.0",
+        "name": "VLM + LoRA + Visual RAG + Agentic RAG API",
+        "version": "2.0.0",
+        "architecture": "Multimodal (Visual + Text) RAG",
         "endpoints": {
             "/docs": "Swagger UI documentation",
             "/redoc": "ReDoc documentation",
-            "/health": "Health check",
+            "/health": "Health check (includes Visual RAG status)",
             "/analyze": "POST Document analysis (with LoRA fine-tuning)",
-            "/search": "POST Search documents (Agentic RAG)"
+            "/search": "POST Text search (Agentic RAG only)",
+            "/multimodal-search": "POST Multimodal search (Visual RAG + Agentic RAG)"
         },
         "model_status": "loaded_with_lora" if vlm_loaded else "fallback_mode",
         "base_model": "llava-v1.5-7b",
-        "lora_adapter": "Shion1124/vlm-lora-agentic-rag"
+        "lora_adapter": "Shion1124/vlm-lora-agentic-rag",
+        "visual_rag": "CLIP (OpenAI) for image search",
+        "text_rag": "Sentence Transformers (all-MiniLM-L6-v2) for semantic search"
     }
 
 # ============================================================

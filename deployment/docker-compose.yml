@@ -11,8 +11,8 @@ version: '3.8'
 services:
   vlm-api:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: deployment/Dockerfile
     container_name: vlm-agentic-rag-api
     
     # GPU設定（NVIDIA Docker対応）
@@ -24,9 +24,9 @@ services:
               count: 1
               capabilities: [gpu]
     
-    # ポートマッピング
+    # ポートマッピング（Dockerfile EXPOSE 8080 に合わせる）
     ports:
-      - "8000:8000"
+      - "8080:8080"
     
     # ボリュームマウント
     volumes:
@@ -39,6 +39,8 @@ services:
       - CUDA_VISIBLE_DEVICES=0
       - TRANSFORMERS_CACHE=/models
       - HF_HOME=/models
+      - API_KEY=${API_KEY:-}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://*.run.app}
     
     # 再起動ポリシー
     restart: unless-stopped

@@ -1,14 +1,14 @@
 # ============================================================
 # Dockerfile: VLM + LoRA Agentic RAG API
 # 
-# Build:
-#   docker build -t vlm-agentic-rag:latest .
+# Build (from repo root):
+#   docker build -f deployment/Dockerfile -t vlm-agentic-rag:latest .
 # 
 # Run (local):
-#   docker run --gpus all -p 8000:8000 vlm-agentic-rag:latest
+#   docker run --gpus all -p 8080:8080 vlm-agentic-rag:latest
 # 
 # Run (background):
-#   docker run -d --gpus all -p 8000:8000 --name vlm-api vlm-agentic-rag:latest
+#   docker run -d --gpus all -p 8080:8080 --name vlm-api vlm-agentic-rag:latest
 # ============================================================
 
 FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
@@ -47,8 +47,16 @@ RUN pip install --no-cache-dir -r requirements_production.txt
 # Application Code
 # ============================================================
 
-COPY api_production.py .
-COPY vlm_agentic_rag_complete.py .
+COPY src/api_production.py .
+COPY src/vlm_agentic_rag_complete.py .
+
+# ============================================================
+# Non-root user (セキュリティ)
+# ============================================================
+
+RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser \
+    && chown -R appuser:appuser /app
+USER appuser
 
 # ============================================================
 # Health Check

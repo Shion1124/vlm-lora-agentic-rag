@@ -62,6 +62,7 @@ gcloud services enable cloudbuild.googleapis.com
 ```bash
 cd /path/to/vlm-lora-agentic-rag
 
+# API_KEY を設定して認証を有効化（推奨）
 gcloud run deploy vlm-agentic-rag-api \
   --source . \
   --region us-central1 \
@@ -69,8 +70,13 @@ gcloud run deploy vlm-agentic-rag-api \
   --allow-unauthenticated \
   --memory 16Gi \
   --cpu 4 \
-  --timeout 3600
+  --timeout 3600 \
+  --set-env-vars "API_KEY=your-secret-api-key" \
+  --set-env-vars "ALLOWED_ORIGINS=https://your-frontend.com"
 ```
+
+> **Note**: `API_KEY` を設定すると、POST エンドポイント (`/analyze`, `/search`, `/multimodal-search`) に `X-API-Key` ヘッダーが必要になります。
+> `API_KEY` を空にすると認証なし（開発モード）で動作します。
 
 ### Step 4: Get Service URL
 
@@ -83,13 +89,18 @@ gcloud run services describe vlm-agentic-rag-api \
 ## Docker Build (Optional - Local)
 
 ```bash
-# Build image
-docker build -t vlm-agentic-rag:latest .
+# Build image (from repo root)
+docker build -f deployment/Dockerfile -t vlm-agentic-rag:latest .
 
 # Run container
 docker run -p 8080:8080 \
   -e PORT=8080 \
+  -e API_KEY=your-secret-key \
   vlm-agentic-rag:latest
+
+# Or use docker-compose (from deployment/ directory)
+cd deployment
+API_KEY=your-secret-key docker-compose up --build
 
 # Access: http://localhost:8080/docs
 ```
@@ -97,6 +108,12 @@ docker run -p 8080:8080 \
 ## Environment Variables
 
 ```bash
+# 認証キー（設定すると POST エンドポイントに X-API-Key ヘッダー必須）
+export API_KEY="your-secret-api-key"
+
+# CORS 許可オリジン（カンマ区切り）
+export ALLOWED_ORIGINS="https://*.run.app,http://localhost:3000"
+
 # Optional: HuggingFace Token (for private models)
 export HF_TOKEN="hf_xxxxxxxxxxxx"
 
@@ -104,6 +121,8 @@ export HF_TOKEN="hf_xxxxxxxxxxxx"
 export TRANSFORMERS_CACHE="/path/to/cache"
 export HF_HOME="/path/to/hf-home"
 ```
+
+> `.env.example` をコピーして `.env` を作成すると便利です: `cp .env.example .env`
 
 ## Troubleshooting
 
